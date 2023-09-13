@@ -1,71 +1,66 @@
-import React, { useEffect } from 'react';
-import { Wallpaper } from './style';
-import styled from 'styled-components';
-import Dropdown from 'react-bootstrap/Dropdown';
-import DropdownButton from 'react-bootstrap/DropdownButton';
-import ReviewCard from '../../components/ReviewCard/ReviewCard';
-import axios from 'axios';
+import React, { useEffect } from "react";
+import { Wallpaper } from "./style";
+import styled from "styled-components";
+import ReviewCard from "../../components/ReviewCard/ReviewCard";
+import axios from "axios";
+
 interface Review {
   id: number;
-  artist_name: string;
-  album_name: string;
-  review_title: string;
-  review_content: string;
+  title: string;
+  description: string;
   rating: number;
-  author_name: string;
-  author_username: string;
-  author_image_uri: string;
-  album_image_uri: string;
+  artistName: string;
+  author: string;
+  songTitle: string;
+  songCover: string;
 }
+
 export const TableDiv = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  align-items: center;
   width: 100%;
   max-width: 60vw;
   flex-direction: column;
   gap: 12%;
   margin: auto;
-  margin-top: 1%;
 `;
+
 const Home: React.FC = () => {
-  const [data, setData] = React.useState([]);
+  const [data, setData] = React.useState<Review[]>([]);
 
   const fetchData = async () => {
-
     try {
-        const response = await axios.get('http://127.0.0.1:8000/reviews/', {
-        });
-        
-        const data = response.data.reviews;
-        console.log('---------------');
-        console.log(data);
-        console.log('---------------');
-        setData(data);
-      // setSearchResults(data);
+      const response = await axios.get("http://127.0.0.1:8000/reviews/", {});
+
+      const data = response.data.reviews;
+      setData(data);
     } catch (error) {
-      console.error('Erro ao buscar dados:', error);
+      console.error("Erro ao buscar dados:", error);
     }
   };
+
   useEffect(() => {
     fetchData();
   }, []);
 
   return (
     <Wallpaper>
-      <TableDiv>  
+      <TableDiv>
         {data.map((review: Review) => (
           <ReviewCard
-            songCover={review.album_image_uri}
-            songTitle={review.album_name}
-            artistName={review.artist_name}
+            key={review.id} // Certifique-se de incluir uma chave única
+            songCover={review.songCover}
+            songTitle={review.songTitle}
+            artistName={review.artistName}
             rating={review.rating}
-            title={review.review_title}
+            title={review.title}
             content={review.description}
-            authorName='ana'
-            authorUsername='ana2'
+            authorName="Ana"
+            authorUsername="aninha"
+            authorAvatar="https://avatars.githubusercontent.com/u/60005589?v=4"
           />
         ))}
-
       </TableDiv>
     </Wallpaper>
   );
