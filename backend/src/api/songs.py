@@ -1,10 +1,29 @@
 from fastapi import APIRouter, HTTPException
 from starlette.responses import JSONResponse
-from src.schemas.song import SongGet, SongModel, SongDelete, SongList, SongNameList, SongCreateModel, GetSongsTopRated, SongCreate
+from src.schemas.song import (
+    SongGet,
+    SongModel,
+    SongDelete,
+    SongList,
+    SongNameList,
+    SongCreateModel,
+    GetSongsTopRated,
+    SongCreate,
+)
 from src.service.impl.song_service import SongService
+from src.schemas.review import ReviewGet
+from typing import List
+from src.db.__init__ import database as db
 from src.schemas.review import ReviewModel, ReviewList
 
 router = APIRouter()
+
+
+def calculate_average_rating(reviews: List[dict]) -> float:
+    ratings = [review["rating"] for review in reviews]
+    if not ratings:
+        return 0
+    return sum(ratings) / len(ratings)
 
 
 @router.get(
@@ -14,23 +33,25 @@ router = APIRouter()
     summary="Get a specific song",
 )
 def get_song(song_id: str):
-    song_get_response = SongService.get_song(song_id)
+    song = SongService.get_song(song_id)
 
-    if not song_get_response:
-        raise HTTPException(status_code=404, detail="Song not found")
+    reviews = db.find("reviews", {"song": song_id})
+    song["average_rating"] = calculate_average_rating(reviews)
 
-    return song_get_response
+    return song
 
 
 @router.get(
     "/",
     response_model=SongList,
     response_class=JSONResponse,
-    description="Retrieve all songs"
+    description="Retrieve all songs",
 )
 def get_songs():
     songs = SongService.get_songs()
-    return {'songs': songs, }
+    return {
+        "songs": songs,
+    }
 
 
 @router.put(
@@ -85,23 +106,21 @@ def get_highlighted():
     songs = SongService.get_highlighted()
     songs_rating = SongService.get_top_rated_songs(-1)
     for song in songs:
-        song['id'] = str(song['_id'])
+        song["id"] = str(song["_id"])
         found = False
         for song_rating in songs_rating:
-            if song_rating['song'] == song['id']:
+            if song_rating["song"] == song["id"]:
                 print(song_rating)
-                song['average_rating'] = song_rating['average_rating']
+                song["average_rating"] = song_rating["average_rating"]
                 found = True
                 break
         if not found:
-            song['average_rating'] = 0
-        del song['_id']
+            song["average_rating"] = 0
+        del song["_id"]
 
-    songs = sorted(songs, key=lambda x: x['popularity'], reverse=True)
+    songs = sorted(songs, key=lambda x: x["popularity"], reverse=True)
 
-    return {
-        "songs": songs
-    }
+    return {"songs": songs}
 
 
 @router.get(
@@ -152,9 +171,7 @@ def get_by_artist(artist):
 
 
 @router.get(
-    "/songs_r/top-rated",
-    response_model=dict,
-    description="Retrieve top-rated songs"
+    "/songs_r/top-rated", response_model=dict, description="Retrieve top-rated songs"
 )
 def get_top_rated_songs(limit: int = 5):
     """
@@ -166,16 +183,13 @@ def get_top_rated_songs(limit: int = 5):
     """
     songs = SongService.get_top_rated_songs(limit)
     for song in songs:
-
-        real_data_songs = SongService.get_song(song['song'])
-        song['title'] = real_data_songs['title']
-        song['artist'] = real_data_songs['artist']
-        song['image_url'] = real_data_songs['image_url']
+        real_data_songs = SongService.get_song(song["song"])
+        song["title"] = real_data_songs["title"]
+        song["artist"] = real_data_songs["artist"]
+        song["image_url"] = real_data_songs["image_url"]
         song["id"] = song["song"]
     print(songs)
-    response = {
-        "songs": songs
-    }
+    response = {"songs": songs}
     return response
 
 
@@ -186,13 +200,12 @@ def get_top_rated_songs(limit: int = 5):
     summary="Get reviews of a specific song",
 )
 def get_reviews(song_id: str):
-
     reviews = SongService.get_reviews(song_id)
 
-    print('-------------')
+    print("-------------")
 
     print(reviews)
-    print('-------------')
+    print("-------------")
     # if not reviews:
     #     raise HTTPException(status_code=404, detail="Reviews not found")
 

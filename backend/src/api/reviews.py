@@ -4,40 +4,34 @@ from src.db import database as db
 from datetime import datetime
 from src.service.impl.review_service import ReviewService
 from src.service.impl.song_service import SongService
-from src.schemas.review import ReviewCreateModel, ReviewModel, ReviewList, ReviewDeleteModel
+from src.schemas.review import (
+    ReviewCreateModel,
+    ReviewModel,
+    ReviewList,
+    ReviewDeleteModel,
+)
 from starlette.responses import JSONResponse
 from fastapi import HTTPException
 
 router = APIRouter()
 
 
-@router.get(
-    "/",
-    response_model=ReviewList,
-    response_class=JSONResponse
-)
+@router.get("/", response_model=ReviewList, response_class=JSONResponse)
 def get_reviews():
     review_list_response = ReviewService.get_reviews()
-    print('-------------------------------')
 
-    print(review_list_response)
-    print('-------------------------------')
     for review in review_list_response:
-        song = SongService.get_song(review['song'])
-        review['songCover'] = song['image_url']
-        review['songTitle'] = song['title']
-        review['artistName'] = song['artist']
+        song = SongService.get_song(review["song"])
+        review["songCover"] = song["image_url"]
+        review["songTitle"] = song["title"]
+        review["artistName"] = song["artist"]
 
     return {
-        'reviews': review_list_response,
+        "reviews": review_list_response,
     }
 
 
-@router.get(
-    "/{review_id}",
-    response_model=ReviewModel,
-    response_class=JSONResponse
-)
+@router.get("/{review_id}", response_model=ReviewModel, response_class=JSONResponse)
 def get_review(review_id: str):
     review_get_response = ReviewService.get_review(review_id)
 
@@ -45,11 +39,7 @@ def get_review(review_id: str):
     return review_get_response
 
 
-@router.post(
-    "/create",
-    response_model=ReviewCreateModel,
-    response_class=JSONResponse
-)
+@router.post("/create", response_model=ReviewCreateModel, response_class=JSONResponse)
 def create_review(review: ReviewCreateModel):
     date = datetime.now()
     review.created_at = date
@@ -57,11 +47,7 @@ def create_review(review: ReviewCreateModel):
     return review_create_response
 
 
-@router.put(
-    "/{review_id}",
-    response_model=ReviewModel,
-    response_class=JSONResponse
-)
+@router.put("/{review_id}", response_model=ReviewModel, response_class=JSONResponse)
 def edit_review(review_id: str, review: ReviewCreateModel):
     print("edit_review")
     review_edit_response = ReviewService.update_review(review_id, review)
@@ -71,9 +57,7 @@ def edit_review(review_id: str, review: ReviewCreateModel):
 
 
 @router.delete(
-    "/{review_id}",
-    response_model=ReviewDeleteModel,
-    response_class=JSONResponse
+    "/{review_id}", response_model=ReviewDeleteModel, response_class=JSONResponse
 )
 def delete_review(review_id: str):
     review_delete_response = ReviewService.delete_review(review_id)
@@ -85,10 +69,11 @@ def delete_review(review_id: str):
 
 
 # PRECISA DE UMA FUNÇÃO DESSA AQUI? -> SERIA UM SERVICE
-def get_reviews_by_song_id(song_id: int):
+def get_reviews_by_song(song_id: int):
     # fazer uma função dessa no db.py
-    reviews = db.get_reviews_by_song_id(song_id)
+    reviews = db.get_reviews_by_song(song_id)
     if not reviews:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Song not found")
+            status_code=status.HTTP_404_NOT_FOUND, detail="Song not found"
+        )
     return reviews
