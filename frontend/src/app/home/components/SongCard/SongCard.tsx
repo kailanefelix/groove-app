@@ -17,6 +17,7 @@ export type SongCardProps = {
   appleMusicLink: string;
   youtubeLink: string;
   deezerLink: string;
+  spotify_link_data_cy?: string;
 };
 
 const CardWrapper = styled.div`
@@ -156,7 +157,10 @@ const SongCard = (props: SongCardProps) => {
         </ButtonRate> */}
 
         <AvailableLinks>
-          <AvailableLink href={props.spotifyLink}>
+          <AvailableLink
+            href={props.spotifyLink}
+            data-cy={props.spotify_link_data_cy}
+          >
             <img src={spotify} width={48} height={48} />
           </AvailableLink>
 
